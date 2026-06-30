@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>별빛 연구소 · 아기 AI 코코 키우기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1b1540; --bg2:#2c2160; --bg3:#3a2a82;
+    --ink:#2a2150; --ink-soft:#6a5fa0;
+    --card:#fdfaff; --card2:#f3edff;
+    --porong:#19c39a;  --porong-d:#0f9e7c;
+    --kkachil:#ff6b6b; --kkachil-d:#e24b4b;
+    --banjjak:#9b6cff;
+    --coco:#ffd23f;    --coco-d:#f0b400;
+    --sky:#5aa9ff;
+    --line:#e7defc;
+    --good:#19c39a; --bad:#ff6b6b;
+    --shadow:0 10px 0 rgba(40,28,90,.14), 0 18px 36px rgba(20,12,60,.28);
+    --shadow-sm:0 5px 0 rgba(40,28,90,.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:'Jua',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #3c2c8a 0%, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #6b3fb0 0%, transparent 55%),
+      linear-gradient(180deg,#241a55 0%, #1b1540 100%);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .star{position:absolute;border-radius:50%;background:#fff;opacity:.8;animation:tw 3s ease-in-out infinite;}
+  @keyframes tw{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:.9;transform:scale(1)}}
+
+  #app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;align-items:center;}
+  .frame{
+    width:100%;max-width:560px;height:100%;margin:0 auto;display:flex;flex-direction:column;
+    padding:10px 14px max(14px,env(safe-area-inset-bottom)) 14px;
+  }
+
+  /* ---------- top status bar ---------- */
+  .topbar{display:flex;align-items:center;gap:10px;color:#fff;padding:6px 4px 10px;}
+  .topbar.hidden{visibility:hidden;}
+  .coco-mini{width:46px;height:46px;flex:0 0 46px;filter:drop-shadow(0 4px 0 rgba(0,0,0,.18));}
+  .stat{flex:1;}
+  .stat .lvl{font-size:14px;line-height:1;opacity:.85;}
+  .stat .lvlname{font-size:17px;line-height:1.2;}
+  .meterwrap{height:13px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden;margin-top:5px;}
+  .meter{height:100%;width:0%;background:linear-gradient(90deg,var(--coco),#ffec9e);border-radius:99px;transition:width .6s cubic-bezier(.2,.9,.2,1);}
+  .pill{background:rgba(255,255,255,.16);border-radius:99px;padding:5px 12px;font-size:14px;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+  .mute{background:rgba(255,255,255,.16);border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;flex:0 0 40px;font-family:inherit;}
+  .mute:active{transform:scale(.9);}
+
+  /* ---------- stage ---------- */
+  .stage{flex:1;display:flex;flex-direction:column;min-height:0;}
+  .card{
+    background:var(--card);border-radius:30px;box-shadow:var(--shadow);
+    padding:20px 18px;flex:1;display:flex;flex-direction:column;min-height:0;position:relative;overflow:hidden;
+    animation:cardin .4s cubic-bezier(.2,.9,.2,1);
+  }
+  @keyframes cardin{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+  .scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;}
+
+  h1,h2,h3{margin:0;line-height:1.18;}
+  .eyebrow{font-family:'Gaegu',cursive;font-weight:700;color:var(--banjjak);letter-spacing:.04em;font-size:15px;}
+  .speech{
+    background:var(--card2);border:3px solid var(--line);border-radius:22px;padding:13px 16px;
+    font-size:18px;line-height:1.45;position:relative;color:var(--ink);
+  }
+  .speech.coco{border-color:#ffe6a3;background:#fff8e3;}
+  .speech b{color:var(--banjjak);}
+  .speech .who{font-family:'Gaegu',cursive;font-weight:700;font-size:14px;color:var(--coco-d);display:block;margin-bottom:2px;}
+
+  .center{align-items:center;text-align:center;}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    font-family:inherit;border:0;cursor:pointer;border-radius:22px;color:#fff;font-size:21px;
+    padding:16px 18px;box-shadow:var(--shadow-sm);transition:transform .08s, box-shadow .08s, filter .15s;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1;user-select:none;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(40,28,90,.12);}
+  .btn:focus-visible{outline:4px solid #ffffffaa;outline-offset:3px;}
+  .btn[disabled]{opacity:.45;pointer-events:none;}
+  .btn.big{font-size:24px;padding:20px;width:100%;}
+  .btn.coco{background:linear-gradient(180deg,var(--coco),var(--coco-d));color:#5a3d00;}
+  .btn.porong{background:linear-gradient(180deg,var(--porong),var(--porong-d));}
+  .btn.kkachil{background:linear-gradient(180deg,var(--kkachil),var(--kkachil-d));}
+  .btn.banjjak{background:linear-gradient(180deg,#b78cff,var(--banjjak));}
+  .btn.ghost{background:#efe8ff;color:var(--ink);box-shadow:var(--shadow-sm);}
+  .btn.sky{background:linear-gradient(180deg,#73b6ff,#3f86e0);}
+  .btnrow{display:flex;gap:12px;}
+  .btnrow .btn{flex:1;}
+
+  /* creature + coco display */
+  .arena{display:flex;align-items:center;justify-content:center;flex:1;min-height:150px;position:relative;}
+  .creature-svg, .coco-svg{display:block;}
+  .float{animation:flo 2.6s ease-in-out infinite;}
+  @keyframes flo{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  .pop{animation:pop .45s cubic-bezier(.2,1.5,.4,1);}
+  @keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .shake{animation:shk .5s;}
+  @keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px) rotate(-3deg)}40%{transform:translateX(9px) rotate(3deg)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+  /* "코코 머릿속" attention panel */
+  .brainbox{background:var(--card2);border-radius:20px;padding:13px 15px;border:3px solid var(--line);}
+  .brainbox .ttl{font-size:14px;color:var(--ink-soft);font-family:'Gaegu',cursive;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .cue{display:flex;align-items:center;gap:9px;margin:7px 0;}
+  .cue .nm{width:54px;font-size:15px;}
+  .cuebar{flex:1;height:16px;background:#e6ddfa;border-radius:99px;overflow:hidden;}
+  .cuefill{height:100%;width:0%;border-radius:99px;transition:width .9s cubic-bezier(.2,.9,.2,1);}
+  .cuefill.col{background:linear-gradient(90deg,#ff8f8f,#ffd23f,#5aa9ff);}
+  .cuefill.ant{background:linear-gradient(90deg,#19c39a,#0f9e7c);}
+  .cue .pct{width:46px;text-align:right;font-size:15px;color:var(--ink-soft);}
+
+  .conf{height:22px;background:#eee6fb;border-radius:99px;overflow:hidden;position:relative;margin-top:6px;}
+  .conffill{height:100%;width:0%;border-radius:99px;transition:width 1s cubic-bezier(.2,.9,.2,1);background:linear-gradient(90deg,#9b6cff,#5aa9ff);}
+  .conf .lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#3a2a82;}
+
+  .tag{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:6px 13px;font-size:16px;color:#fff;}
+  .tag.porong{background:var(--porong);}
+  .tag.kkachil{background:var(--kkachil);}
+  .tag.banjjak{background:var(--banjjak);}
+
+  .verdict{font-size:24px;text-align:center;}
+  .verdict.good{color:var(--good);}
+  .verdict.bad{color:var(--bad);}
+
+  /* dex / collection */
+  .dexgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .dexcell{background:var(--card2);border-radius:18px;padding:8px 6px;text-align:center;border:3px solid var(--line);}
+  .dexcell .nm{font-size:13px;margin-top:2px;}
+
+  /* insight cards (wrapup) */
+  .insight{display:flex;gap:12px;align-items:flex-start;background:var(--card2);border-radius:20px;padding:14px;border:3px solid var(--line);margin-bottom:10px;}
+  .insight .ic{font-size:30px;flex:0 0 auto;}
+  .insight .tx{font-size:16px;line-height:1.4;}
+  .insight .tx b{color:var(--banjjak);}
+
+  .progress-dots{display:flex;gap:7px;justify-content:center;margin-top:10px;}
+  .dot{width:9px;height:9px;border-radius:50%;background:#d9cdf7;}
+  .dot.on{background:var(--banjjak);}
+  .dot.done{background:var(--porong);}
+
+  .footer{padding-top:12px;}
+  .hint{font-size:14px;color:var(--ink-soft);text-align:center;font-family:'Gaegu',cursive;font-weight:700;}
+
+  .badge-big{width:180px;height:180px;margin:0 auto;}
+
+  /* confetti */
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;}
+  .confetti{position:absolute;width:11px;height:14px;border-radius:3px;will-change:transform;}
+
+  @media (max-height:680px){
+    .card{padding:15px 15px;border-radius:24px;}
+    .btn.big{padding:16px;font-size:21px;}
+    h1{font-size:26px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .float,.pop,.shake,.star{animation:none !important;}
+    *{transition-duration:.01ms !important;}
+  }
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="app"><div class="frame">
+  <div class="topbar hidden" id="topbar">
+    <div class="coco-mini" id="cocoMini"></div>
+    <div class="stat">
+      <div class="lvl">코코 · <span id="lvlName">알</span></div>
+      <div class="meterwrap"><div class="meter" id="meter"></div></div>
+    </div>
+    <div class="pill" id="dataPill">📚 <span id="dataCount">0</span></div>
+    <button class="mute" id="muteBtn" aria-label="소리 켜기/끄기">🔊</button>
+  </div>
+  <div class="stage" id="stage"></div>
+</div></div>
+<div id="fx"></div>
+
+<script>
+"use strict";
+/* =========================================================================
+   별빛 연구소 · 아기 AI 코코 키우기
+   - 학생이 데이터를 주면 코코(AI)가 "진짜로" 학습하는 분류기(나이브베이즈 + 관심도 가중)
+   - 편향된 데이터 → 코코가 색깔만 보고 당당히 오답 → 학생이 잡아내고 데이터를 보강
+   - 데이터를 보강하면 코코의 판단 근거가 색깔→더듬이로 실제로 바뀜
+   ========================================================================= */
+
+/* ---------------- 별 배경 ---------------- */
+(function(){
+  const s=document.getElementById('stars');let h='';
+  for(let i=0;i<70;i++){const sz=Math.random()*2.4+1;
+    h+=`<div class="star" style="left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-delay:${Math.random()*3}s"></div>`;}
+  s.innerHTML=h;
+})();
+
+/* ---------------- 사운드(웹오디오, 파일 없음) ---------------- */
+const Sound=(()=>{
+  let ctx=null, muted=false;
+  function ac(){ if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} if(ctx&&ctx.state==='suspended')ctx.resume(); return ctx;}
+  function tone(freq,dur,type='sine',vol=0.12,when=0){
+    const c=ac(); if(!c||muted)return;
+    const o=c.createOscillator(),g=c.createGain();
+    o.type=type;o.frequency.value=freq;o.connect(g);g.connect(c.destination);
+    const t=c.currentTime+when;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.start(t);o.stop(t+dur+0.02);
+  }
+  return {
+    tap(){tone(520,.08,'triangle',.08);},
+    good(){[660,880,1100].forEach((f,i)=>tone(f,.16,'triangle',.1,i*0.07));},
+    bad(){tone(200,.18,'sawtooth',.09);tone(150,.22,'sawtooth',.08,.08);},
+    levelup(){[523,659,784,1046].forEach((f,i)=>tone(f,.2,'sine',.1,i*0.09));},
+    pop(){tone(740,.09,'sine',.09);},
+    think(){tone(400,.1,'sine',.05);tone(500,.1,'sine',.05,.12);},
+    reveal(){tone(300,.25,'sine',.1);tone(450,.3,'sine',.08,.12);},
+    toggle(){muted=!muted;return muted;}
+  };
+})();
+
+/* ---------------- 분류기 (검증된 로직) ---------------- */
+const FEATURES=["color","antenna","body","eyes","pattern"];
+const SALIENCE={color:2.15,antenna:1.0,body:0.6,eyes:0.5,pattern:0.6};
+const CLASSES=["porong","kkachil"];
+function trainModel(data){
+  const counts={},classCount={};
+  for(const c of CLASSES){counts[c]={};classCount[c]=0;for(const f of FEATURES)counts[c][f]={};}
+  for(const d of data){classCount[d.label]++;for(const f of FEATURES){const v=String(d[f]);counts[d.label][f][v]=(counts[d.label][f][v]||0)+1;}}
+  return {counts,classCount,n:data.length,data:data.slice()};
+}
+function fvals(m,f){const s=new Set();for(const c of CLASSES)for(const v of Object.keys(m.counts[c][f]))s.add(v);return s;}
+function pvc(m,c,f,v){const k=fvals(m,f).size||1;return ((m.counts[c][f][String(v)]||0)+1)/(m.classCount[c]+k);}
+function predict(m,item){
+  const logp={};
+  for(const c of CLASSES){let s=Math.log((m.classCount[c]+1)/(m.n+2));for(const f of FEATURES)s+=SALIENCE[f]*Math.log(pvc(m,c,f,item[f]));logp[c]=s;}
+  const mx=Math.max(...CLASSES.map(c=>logp[c]));
+  const ex=CLASSES.map(c=>Math.exp(logp[c]-mx));const sum=ex.reduce((a,b)=>a+b,0);
+  const probs={};CLASSES.forEach((c,i)=>probs[c]=ex[i]/sum);
+  const pred=probs.porong>=probs.kkachil?"porong":"kkachil";
+  let best=null,bv=-1e9;
+  for(const f of FEATURES){const other=pred==="porong"?"kkachil":"porong";
+    const llr=Math.log(pvc(m,pred,f,item[f]))-Math.log(pvc(m,other,f,item[f]));
+    const c=SALIENCE[f]*llr;if(c>bv){bv=c;best=f;}}
+  let unseen=false;for(const f of FEATURES)if(!fvals(m,f).has(String(item[f])))unseen=true;
+  return {pred,conf:probs[pred],reason:best,unseen,probs};
+}
+// 한 가지 단서만 보고 학습데이터를 몇 % 맞힐 수 있나 (코코 머릿속 시각화용)
+function cueReliability(m,f){
+  if(m.n===0)return 0;
+  const vmap={};for(const d of m.data){const v=String(d[f]);(vmap[v]=vmap[v]||{porong:0,kkachil:0})[d.label]++;}
+  let correct=0;for(const d of m.data){const v=vmap[String(d[f])];const guess=v.porong>=v.kkachil?"porong":"kkachil";if(guess===d.label)correct++;}
+  return Math.round(correct/m.n*100);
+}
+
+/* ---------------- 데이터 (검증 완료) ---------------- */
+const KO={porong:"포롱이",kkachil:"까칠이",banjjak:"반짝이"};
+const TRAIN=[
+  {color:"blue",  antenna:"round", body:"circle", eyes:2, pattern:"spots",  label:"porong"},
+  {color:"green", antenna:"round", body:"blob",   eyes:1, pattern:"plain",  label:"porong"},
+  {color:"blue",  antenna:"round", body:"square", eyes:3, pattern:"stripes",label:"porong"},
+  {color:"red",   antenna:"spiky", body:"blob",   eyes:2, pattern:"stripes",label:"kkachil"},
+  {color:"orange",antenna:"spiky", body:"circle", eyes:3, pattern:"plain",  label:"kkachil"},
+  {color:"red",   antenna:"spiky", body:"square", eyes:1, pattern:"spots",  label:"kkachil"},
+];
+const PREDICT_EASY=[
+  {color:"green", antenna:"round", body:"square", eyes:2, pattern:"plain",  truth:"porong"},
+  {color:"orange",antenna:"spiky", body:"blob",   eyes:1, pattern:"stripes",truth:"kkachil"},
+  {color:"blue",  antenna:"round", body:"circle", eyes:3, pattern:"spots",  truth:"porong"},
+];
+const TRAP={color:"red", antenna:"round", body:"circle", eyes:2, pattern:"plain", truth:"porong"};
+const FIX=[
+  {color:"red",   antenna:"round", body:"blob",   eyes:1, pattern:"plain",  label:"porong"},
+  {color:"orange",antenna:"round", body:"square", eyes:2, pattern:"spots",  label:"porong"},
+  {color:"blue",  antenna:"spiky", body:"circle", eyes:3, pattern:"stripes",label:"kkachil"},
+  {color:"green", antenna:"spiky", body:"blob",   eyes:1, pattern:"plain",  label:"kkachil"},
+];
+const NOVEL={color:"purple", antenna:"star", body:"star", eyes:4, pattern:"glow", truth:"banjjak"};
+
+/* ---------------- 색/도형 헬퍼 ---------------- */
+const COLORMAP={blue:"#5aa9ff",green:"#3ed18b",red:"#ff6b6b",orange:"#ffa94d",purple:"#b57bff"};
+const DARK={blue:"#2f7fd6",green:"#22a866",red:"#e24b4b",orange:"#e8893a",purple:"#9159e0"};
+
+/* ---------------- 외계 친구 SVG ---------------- */
+function creatureSVG(f,opt={}){
+  const size=opt.size||190, hl=opt.highlight;
+  const col=COLORMAP[f.color]||"#cfc6ee", dk=DARK[f.color]||"#9a8fce";
+  const cx=100, cy=120;
+  let body="";
+  if(f.body==="circle") body=`<ellipse cx="${cx}" cy="${cy}" rx="62" ry="58" fill="${col}" stroke="${dk}" stroke-width="5"/>`;
+  else if(f.body==="square") body=`<rect x="${cx-58}" y="${cy-56}" width="116" height="112" rx="34" fill="${col}" stroke="${dk}" stroke-width="5"/>`;
+  else body=`<path d="M100 60 C150 60 168 100 158 132 C150 160 120 178 100 178 C80 178 50 160 42 132 C32 100 50 60 100 60 Z" fill="${col}" stroke="${dk}" stroke-width="5"/>`;
+  // pattern
+  let pat="";
+  const clip=`clip-${Math.random().toString(36).slice(2,7)}`;
+  if(f.pattern==="spots") pat=`<g fill="${dk}" opacity=".35"><circle cx="78" cy="108" r="9"/><circle cx="120" cy="98" r="7"/><circle cx="112" cy="138" r="8"/><circle cx="74" cy="142" r="6"/></g>`;
+  else if(f.pattern==="stripes") pat=`<g stroke="${dk}" stroke-width="9" opacity=".28"><line x1="60" y1="92" x2="140" y2="92"/><line x1="52" y1="120" x2="148" y2="120"/><line x1="60" y1="148" x2="140" y2="148"/></g>`;
+  else if(f.pattern==="glow") pat=`<g fill="#fff" opacity=".7"><circle cx="84" cy="106" r="5"/><circle cx="118" cy="116" r="4"/><circle cx="100" cy="140" r="6"/><circle cx="128" cy="98" r="3"/></g>`;
+  // eyes
+  const n=f.eyes; let eyes="";
+  const spread = n===1?[0]: n===2?[-22,22]: n===3?[-30,0,30]:[-34,-11,11,34];
+  spread.forEach(dx=>{ const ex=cx+dx, ey=cy-6, r=n>=4?11:14;
+    eyes+=`<circle cx="${ex}" cy="${ey}" r="${r}" fill="#fff" stroke="${dk}" stroke-width="2.5"/><circle cx="${ex+3}" cy="${ey+2}" r="${r*0.42}" fill="#2a2150"/><circle cx="${ex+6}" cy="${ey-2}" r="${r*0.16}" fill="#fff"/>`;});
+  // mouth
+  const mouth=`<path d="M84 ${cy+26} Q100 ${cy+40} 116 ${cy+26}" fill="none" stroke="${dk}" stroke-width="4.5" stroke-linecap="round"/>`;
+  // cheeks
+  const cheeks=`<circle cx="66" cy="${cy+18}" r="8" fill="#ff9bb0" opacity=".55"/><circle cx="134" cy="${cy+18}" r="8" fill="#ff9bb0" opacity=".55"/>`;
+  // antenna
+  function antenna(dx,bend){
+    const x0=cx+dx, y0=cy-52, x1=cx+dx+bend, y1=cy-92;
+    let tip="";
+    if(f.antenna==="round") tip=`<circle cx="${x1}" cy="${y1}" r="13" fill="${col}" stroke="${dk}" stroke-width="4"/>`;
+    else if(f.antenna==="spiky") tip=`<path d="M${x1} ${y1-16} L${x1+13} ${y1+9} L${x1-13} ${y1+9} Z" fill="${col}" stroke="${dk}" stroke-width="4" stroke-linejoin="round"/>`;
+    else tip=`<path d="M${x1} ${y1-16} l4.7 9.5 10.5 1.5 -7.6 7.4 1.8 10.4 -9.4 -4.9 -9.4 4.9 1.8 -10.4 -7.6 -7.4 10.5 -1.5 Z" fill="#ffe66e" stroke="${dk}" stroke-width="3" stroke-linejoin="round"/>`;
+    return `<path d="M${x0} ${y0} Q${x0+bend*0.5} ${y0-24} ${x1} ${y1}" fill="none" stroke="${dk}" stroke-width="5" stroke-linecap="round"/>${tip}`;
+  }
+  const ant=antenna(-18,-12)+antenna(18,12);
+  // feet
+  const feet=`<ellipse cx="78" cy="${cy+54}" rx="15" ry="9" fill="${dk}"/><ellipse cx="122" cy="${cy+54}" rx="15" ry="9" fill="${dk}"/>`;
+  const hlRing = hl==='antenna' ? `<g><circle cx="100" cy="34" r="62" fill="none" stroke="#ffd23f" stroke-width="6" stroke-dasharray="10 9" opacity=".95"><animateTransform attributeName="transform" type="rotate" from="0 100 34" to="360 100 34" dur="6s" repeatCount="indefinite"/></circle></g>` : '';
+  return `<svg class="creature-svg" viewBox="0 0 200 200" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${feet}${ant}${body}${pat}${cheeks}${eyes}${mouth}${hlRing}</svg>`;
+}
+
+/* ---------------- 코코(AI) SVG : 성장 단계 + 표정 ---------------- */
+function cocoSVG(stage,mood,size){
+  size=size||190;
+  const Y="#ffd23f",YD="#f0b400",glass="#bfe3ff";
+  // mood eyes
+  function eyepair(open=1,style="round"){
+    if(style==="happy") return `<path d="M76 96 q9 -12 18 0" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M106 96 q9 -12 18 0" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    if(style==="confused") return `<circle cx="85" cy="96" r="9" fill="#2a2150"/><path d="M112 90 l16 8" stroke="#2a2150" stroke-width="5" stroke-linecap="round"/>`;
+    if(style==="surprise") return `<circle cx="85" cy="95" r="11" fill="#fff" stroke="#2a2150" stroke-width="3"/><circle cx="85" cy="95" r="5" fill="#2a2150"/><circle cx="115" cy="95" r="11" fill="#fff" stroke="#2a2150" stroke-width="3"/><circle cx="115" cy="95" r="5" fill="#2a2150"/>`;
+    if(style==="sad") return `<path d="M76 92 q9 8 18 2" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M106 92 q9 8 18 2" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    if(style==="scan") return `<rect x="74" y="92" width="22" height="8" rx="4" fill="#2a2150"/><rect x="104" y="92" width="22" height="8" rx="4" fill="#2a2150"/>`;
+    return `<circle cx="85" cy="96" r="10" fill="#fff"/><circle cx="87" cy="98" r="5.5" fill="#2a2150"/><circle cx="115" cy="96" r="10" fill="#fff"/><circle cx="117" cy="98" r="5.5" fill="#2a2150"/>`;
+  }
+  let eyes,mouth;
+  switch(mood){
+    case "happy": eyes=eyepair(1,"happy"); mouth=`<path d="M82 116 q18 18 36 0" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/>`; break;
+    case "proud": eyes=eyepair(1,"happy"); mouth=`<path d="M84 114 q16 20 32 0" stroke="#2a2150" stroke-width="5" fill="#ff9bb0"/>`; break;
+    case "think": eyes=eyepair(1,"scan"); mouth=`<circle cx="100" cy="118" r="5" fill="#2a2150"/>`; break;
+    case "confused": eyes=eyepair(1,"confused"); mouth=`<path d="M86 120 q14 -8 28 0" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/>`; break;
+    case "surprise": eyes=eyepair(1,"surprise"); mouth=`<ellipse cx="100" cy="120" rx="9" ry="11" fill="#2a2150"/>`; break;
+    case "sad": eyes=eyepair(1,"sad"); mouth=`<path d="M86 122 q14 -10 28 0" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/>`; break;
+    default: eyes=eyepair(1,"round"); mouth=`<path d="M84 116 q16 14 32 0" stroke="#2a2150" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  }
+  const cheeks=`<circle cx="66" cy="112" r="7" fill="#ff9bb0" opacity=".6"/><circle cx="134" cy="112" r="7" fill="#ff9bb0" opacity=".6"/>`;
+
+  // ----- STAGE 0 : egg -----
+  if(stage===0){
+    return `<svg class="coco-svg" viewBox="0 0 200 200" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="100" cy="170" rx="46" ry="10" fill="#000" opacity=".15"/>
+      <path d="M100 36 C140 36 162 96 162 130 C162 164 134 184 100 184 C66 184 38 164 38 130 C38 96 60 36 100 36 Z" fill="#fff6df" stroke="#f0b400" stroke-width="5"/>
+      <g fill="#ffd23f" opacity=".8"><circle cx="78" cy="120" r="10"/><circle cx="120" cy="108" r="8"/><circle cx="108" cy="146" r="9"/><circle cx="74" cy="150" r="6"/></g>
+      <path d="M70 96 l12 10 -14 8 16 9 -16 9" fill="none" stroke="#f0b400" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" opacity=".0"/>
+      <g><circle cx="84" cy="92" r="5" fill="#2a2150"><animate attributeName="ry" values="5;1;5" dur="3.5s" repeatCount="indefinite"/></circle>
+      <circle cx="116" cy="92" r="5" fill="#2a2150"><animate attributeName="ry" values="5;1;5" dur="3.5s" repeatCount="indefinite"/></circle></g>
+      <path d="M88 110 q12 8 24 0" stroke="#2a2150" stroke-width="4" fill="none" stroke-linecap="round"/>
+    </svg>`;
+  }
+  // ----- antenna count by stage -----
+  const ant1=`<path d="M100 52 q-2 -22 -16 -30" stroke="${YD}" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="83" cy="20" r="9" fill="${Y}" stroke="${YD}" stroke-width="3.5"/>`;
+  const ant2=`<path d="M100 52 q2 -22 16 -30" stroke="${YD}" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="117" cy="20" r="9" fill="${Y}" stroke="${YD}" stroke-width="3.5"/>`;
+  const bodyScale = stage===1?0.74: stage===2?0.88: 1;
+  const antennas = stage>=2 ? ant1+ant2 : ant1;
+  const badge = stage>=3 ? `<g><circle cx="138" cy="150" r="16" fill="#fff" stroke="${YD}" stroke-width="3"/><text x="138" y="156" font-size="16" text-anchor="middle" fill="${YD}">★</text></g>` : '';
+  const feet=`<ellipse cx="80" cy="172" rx="14" ry="9" fill="${YD}"/><ellipse cx="120" cy="172" rx="14" ry="9" fill="${YD}"/>`;
+  return `<svg class="coco-svg" viewBox="0 0 200 200" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="100" cy="178" rx="48" ry="9" fill="#000" opacity=".14"/>
+    ${antennas}
+    <g transform="translate(100 118) scale(${bodyScale}) translate(-100 -118)">
+      ${feet}
+      <circle cx="100" cy="116" r="62" fill="${Y}" stroke="${YD}" stroke-width="5"/>
+      <ellipse cx="100" cy="98" rx="46" ry="34" fill="${glass}" stroke="${YD}" stroke-width="4"/>
+      ${eyes}${cheeks}${mouth}${badge}
+    </g>
+  </svg>`;
+}
+
+/* ---------------- 게임 상태 ---------------- */
+const G={
+  screen:"title", idx:0,
+  trained:[], model:trainModel([]),
+  dataCount:0, dex:{}, caught:false, trustedTrap:false,
+};
+function levelInfo(){
+  const n=G.dataCount;
+  if(n===0)return{stage:0,name:"알",pct:6};
+  if(n<=2)return{stage:1,name:"갓 깨어남",pct:25};
+  if(n<=5)return{stage:2,name:"아기 코코",pct:55};
+  if(n<=9)return{stage:3,name:"꼬마 연구원",pct:80};
+  return{stage:3,name:"척척박사 코코",pct:100};
+}
+
+/* ---------------- DOM 헬퍼 ---------------- */
+const stage=document.getElementById('stage');
+function el(html){const d=document.createElement('div');d.innerHTML=html.trim();return d.firstElementChild;}
+function setStage(node){stage.innerHTML="";stage.appendChild(node);}
+function updateTop(){
+  const li=levelInfo();
+  document.getElementById('cocoMini').innerHTML=cocoSVG(li.stage,"happy",46);
+  document.getElementById('lvlName').textContent=li.name;
+  document.getElementById('meter').style.width=li.pct+"%";
+  document.getElementById('dataCount').textContent=G.dataCount;
+}
+function showTop(on){document.getElementById('topbar').classList.toggle('hidden',!on);}
+
+/* ---------------- 효과 ---------------- */
+function confetti(n=40){
+  const fx=document.getElementById('fx');const cols=['#ffd23f','#19c39a','#ff6b6b','#5aa9ff','#9b6cff','#ff9bb0'];
+  for(let i=0;i<n;i++){const c=document.createElement('div');c.className='confetti';
+    const x=Math.random()*100;c.style.left=x+'vw';c.style.top='-20px';
+    c.style.background=cols[i%cols.length];c.style.transform=`rotate(${Math.random()*360}deg)`;
+    const dur=1200+Math.random()*900, xend=(Math.random()*30-15);
+    c.animate([{transform:`translate(0,0) rotate(0deg)`,opacity:1},{transform:`translate(${xend}vw,108vh) rotate(${720+Math.random()*360}deg)`,opacity:1}],{duration:dur,easing:'cubic-bezier(.2,.6,.4,1)'});
+    fx.appendChild(c);setTimeout(()=>c.remove(),dur);}
+}
+
+/* ---------------- 화면들 ---------------- */
+function go(screen){G.screen=screen;G.idx=0;render();}
+
+function render(){
+  const r=SCREENS[G.screen];
+  showTop(!!r.top);
+  if(r.top)updateTop();
+  setStage(r.view());
+}
+
+const SCREENS={};
+
+/* ===== 타이틀 ===== */
+SCREENS.title={top:false,view(){
+  const v=el(`<div class="card center scroll">
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px">
+      <div class="eyebrow">별빛 연구소 · AI 트레이너</div>
+      <h1 style="font-size:34px;line-height:1.15;margin:4px 0 2px">아기 AI<br>코코 키우기</h1>
+      <div class="arena" style="min-height:200px">${cocoSVG(0,"idle",210)}</div>
+      <p class="speech center" style="margin:6px 4px 0">아무것도 모르는 아기 AI <b>코코</b>가 알 속에서 잠자고 있어요.<br>네가 직접 가르쳐서 똑똑하게 키워보자!</p>
+    </div>
+    <div class="footer">
+      <button class="btn coco big" id="start">시작하기 🚀</button>
+      <div class="progress-dots" id="dots"></div>
+    </div>
+  </div>`);
+  v.querySelector('.coco-svg').classList.add('float');
+  v.querySelector('#start').onclick=()=>{Sound.tap();go('intro');};
+  return v;
+}};
+
+/* ===== 인트로 ===== */
+SCREENS.intro={top:false,view(){
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">미션</div>
+    <h2 style="font-size:25px;margin:2px 0 12px">코코의 첫 임무</h2>
+    <div class="arena" style="min-height:170px">${cocoSVG(1,"idle",170)}</div>
+    <div class="speech coco" style="margin-top:8px"><span class="who">코코</span>
+      삐빅! 저는 방금 깨어난 아기 AI예요. 처음엔 아무것도 몰라요!<br>
+      외계 친구들을 보여주고 <b>이름표</b>를 붙여주면, 제가 그걸 보고 배울게요. 🐣</div>
+    <div class="speech" style="margin-top:10px">
+      이 별엔 두 종류 친구가 살아: <span class="tag porong">포롱이</span> 와 <span class="tag kkachil">까칠이</span>.<br>
+      누가 누군지 <b>네가 코코에게 알려줘야</b> 해. 코코는 너를 따라 배운단다!</div>
+    <div class="footer"><button class="btn coco big" id="go">코코 가르치러 가기 ▶</button></div>
+  </div>`);
+  v.querySelector('.coco-svg').classList.add('float');
+  v.querySelector('#go').onclick=()=>{Sound.tap();go('train');};
+  return v;
+}};
+
+/* ===== 1단계: 학습시키기 ===== */
+const TRAIN_WHY=(item)=> item.antenna==="round"
+  ? `더듬이 끝이 <b>동그라미 ●</b> 라서 포롱이!`
+  : `더듬이 끝이 <b>뾰족 ▲</b> 해서 까칠이!`;
+
+SCREENS.train={top:true,view(){
+  if(G.idx>=TRAIN.length) return SCREENS.trainDone.view();
+  const item=TRAIN[G.idx];
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">1단계 · 코코 가르치기 <span style="color:var(--ink-soft)">(${G.idx+1}/${TRAIN.length})</span></div>
+    <h2 style="font-size:22px;margin:2px 0 6px">이 친구는 누구일까?</h2>
+    <div class="arena">${creatureSVG(item)}</div>
+    <div id="msg" class="speech coco" style="display:none"></div>
+    <div class="footer" id="foot">
+      <div class="hint" style="margin-bottom:9px">코코가 너를 보고 배워요. 정답을 골라줘!</div>
+      <div class="btnrow">
+        <button class="btn porong" data-a="porong">포롱이</button>
+        <button class="btn kkachil" data-a="kkachil">까칠이</button>
+      </div>
+    </div>
+  </div>`);
+  v.querySelector('.creature-svg').classList.add('float','pop');
+  v.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>answerTrain(v,item,b.dataset.a));
+  return v;
+}};
+function answerTrain(v,item,ans){
+  const correct=ans===item.label;
+  const foot=v.querySelector('#foot'), msg=v.querySelector('#msg');
+  v.querySelectorAll('[data-a]').forEach(b=>b.disabled=true);
+  if(correct){Sound.good();confetti(22);}else{Sound.bad();v.querySelector('.creature-svg').classList.add('shake');}
+  // 코코는 "정답 라벨"로 학습 (학생이 틀려도 진짜 정답을 배움)
+  G.trained.push(item); G.model=trainModel(G.trained); G.dataCount=G.trained.length;
+  G.dex[item.label]={...item}; updateTop();
+  const li=levelInfo();
+  msg.style.display='block';
+  msg.innerHTML=`<span class="who">코코</span>${correct?'딩동댕! ':'아하, 그렇구나! '}<b>${KO[item.label]}</b>! ${TRAIN_WHY(item)}<br>📚 데이터 ${G.dataCount}개 학습 완료!`;
+  if(G.dataCount===3||G.dataCount===6){setTimeout(()=>{Sound.levelup();},300);}
+  foot.innerHTML=`<button class="btn coco big" id="next">${G.idx<TRAIN.length-1?'다음 친구 ▶':'학습 끝! ▶'}</button>`;
+  foot.querySelector('#next').onclick=()=>{Sound.tap();G.idx++;render();};
+}
+
+SCREENS.trainDone={top:true,view(){
+  const rc=cueReliability(G.model,'color'), ra=cueReliability(G.model,'antenna');
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">코코의 머릿속</div>
+    <h2 style="font-size:23px;margin:2px 0 10px">코코가 쑥쑥 자랐어요!</h2>
+    <div class="arena" style="min-height:160px">${cocoSVG(2,"proud",170)}</div>
+    <div class="speech coco" style="margin:6px 0 12px"><span class="who">코코</span>
+      친구 ${G.dataCount}명을 다 외웠어요! 이제 제 머릿속엔 이런 <b>단서</b>들이 생겼어요. 🔍</div>
+    ${brainBox(rc,ra,"지금은 두 단서 모두 잘 맞히는 것처럼 보여요…")}
+    <div class="footer"><button class="btn coco big" id="go">이제 코코가 혼자 맞혀볼게! ▶</button></div>
+  </div>`);
+  v.querySelector('.coco-svg').classList.add('float');
+  animateBars(v);
+  v.querySelector('#go').onclick=()=>{Sound.tap();go('predict');};
+  return v;
+}};
+
+function brainBox(rc,ra,caption){
+  return `<div class="brainbox">
+    <div class="ttl">🧠 코코가 보는 단서 — <span style="color:var(--ink)">"이 단서만 보면 몇 % 맞힐까?"</span></div>
+    <div class="cue"><div class="nm">🎨 색깔</div><div class="cuebar"><div class="cuefill col" data-w="${rc}"></div></div><div class="pct">${rc}%</div></div>
+    <div class="cue"><div class="nm">📡 더듬이</div><div class="cuebar"><div class="cuefill ant" data-w="${ra}"></div></div><div class="pct">${ra}%</div></div>
+    ${caption?`<div class="hint" style="text-align:left;margin-top:8px">${caption}</div>`:''}
+  </div>`;
+}
+function animateBars(v){requestAnimationFrame(()=>v.querySelectorAll('.cuefill').forEach(f=>f.style.width=f.dataset.w+'%'));}
+
+/* ===== 2단계: AI 예측 + 사람이 검토 ===== */
+SCREENS.predict={top:true,view(){
+  if(G.idx===0 && !G._predIntro){G._predIntro=true;return predictIntro();}
+  if(G.idx>=PREDICT_EASY.length) return SCREENS.predictDone.view();
+  return predictRound(PREDICT_EASY[G.idx], false);
+}};
+function predictIntro(){
+  const v=el(`<div class="card scroll center">
+    <div class="eyebrow">2단계 · 코코의 예측</div>
+    <h2 style="font-size:23px;margin:6px 0 8px">코코가 혼자 맞혀봐요</h2>
+    <div class="arena" style="min-height:170px">${cocoSVG(2,"think",170)}</div>
+    <p class="speech" style="margin:4px 6px">이제 코코가 <b>처음 보는 친구</b>를 스스로 분류해요.<br>
+    하지만 AI가 항상 맞는 건 아니죠? <b>연구원인 네가 꼭 확인</b>해줘야 해!</p>
+    <div class="footer" style="width:100%"><button class="btn sky big" id="go">코코야, 맞혀봐! 👀</button></div>
+  </div>`);
+  v.querySelector('.coco-svg').classList.add('float');
+  v.querySelector('#go').onclick=()=>{Sound.tap();render();};
+  return v;
+}
+function reasonText(reason,pred){
+  const map={color:'색깔', antenna:'더듬이 모양', body:'몸 모양', eyes:'눈 개수', pattern:'무늬'};
+  return `저는 <b>${map[reason]||'생김새'}</b>를 보고 <b>${KO[pred]}</b>라고 생각해요!`;
+}
+function predictRound(item){
+  const p=predict(G.model,item);
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">2단계 · 코코의 예측 <span style="color:var(--ink-soft)">(${G.idx+1}/${PREDICT_EASY.length})</span></div>
+    <div class="arena" style="min-height:150px">${creatureSVG(item)}</div>
+    <div class="speech coco"><span class="who">코코 (생각 중...)</span><span id="guess">🤔 음...</span></div>
+    <div class="conf"><div class="conffill" id="cf"></div><div class="lab" id="cflab"></div></div>
+    <div class="footer" id="foot" style="opacity:0;transition:opacity .3s">
+      <div class="hint" style="margin-bottom:9px">연구원님, 코코 말이 맞나요?</div>
+      <div class="btnrow">
+        <button class="btn porong" data-v="agree">✅ 코코 말이 맞아</button>
+        <button class="btn ghost" data-v="deny">🔎 아니야, 다시 봐</button>
+      </div>
+    </div>
+  </div>`);
+  v.querySelector('.creature-svg').classList.add('float','pop');
+  Sound.think();
+  setTimeout(()=>{
+    v.querySelector('#guess').innerHTML=reasonText(p.reason,p.pred);
+    const cf=v.querySelector('#cf');cf.style.width=Math.round(p.conf*100)+'%';
+    v.querySelector('#cflab').textContent='자신감 '+Math.round(p.conf*100)+'%';
+    const foot=v.querySelector('#foot');foot.style.opacity=1;
+    foot.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>checkPredict(v,item,p,b.dataset.v));
+  },900);
+  return v;
+}
+function checkPredict(v,item,p,choice){
+  v.querySelectorAll('[data-v]').forEach(b=>b.disabled=true);
+  const cocoCorrect = p.pred===item.truth;            // 코코가 실제로 맞았나
+  const studentRight = (choice==='agree')===cocoCorrect; // 학생의 판단이 옳았나
+  const foot=v.querySelector('#foot');
+  if(studentRight){Sound.good();confetti(20);}else{Sound.bad();}
+  let truthTag=`<span class="tag ${item.truth}">${KO[item.truth]}</span>`;
+  let msg;
+  if(cocoCorrect && choice==='agree') msg=`<div class="verdict good">정답이에요! 👍</div><p class="speech" style="margin-top:8px">코코 말이 맞았어요. 진짜 ${truthTag} 였죠. 그래도 <b>확인한 건 잘한 일</b>이에요!</p>`;
+  else if(cocoCorrect && choice==='deny') msg=`<div class="verdict">코코가 맞았어요 🙂</div><p class="speech" style="margin-top:8px">이번엔 코코가 옳았네요 — 진짜 ${truthTag}. 그래도 <b>의심하고 확인하는 습관</b>은 멋진 연구원의 자세예요!</p>`;
+  else msg=`<p class="speech" style="margin-top:8px">실제 정답은 ${truthTag} 였어요.</p>`;
+  foot.innerHTML=msg+`<button class="btn coco big" id="next" style="margin-top:10px">${G.idx<PREDICT_EASY.length-1?'다음 친구 ▶':'다음 ▶'}</button>`;
+  foot.querySelector('#next').onclick=()=>{Sound.tap();G.idx++;render();};
+}
+
+SCREENS.predictDone={top:true,view(){
+  const v=el(`<div class="card scroll center">
+    <div class="eyebrow">잘했어요!</div>
+    <h2 style="font-size:24px;margin:6px 0 6px">코코가 다 맞혔어요! 🎉</h2>
+    <div class="arena" style="min-height:170px">${cocoSVG(3,"proud",180)}</div>
+    <p class="speech" style="margin:4px 6px">코코가 척척 맞히니까 <b>믿음직</b>하죠?<br>그런데… 정말 항상 믿어도 될까요? 다음 친구를 한번 보여줄게요. 😏</p>
+    <div class="footer" style="width:100%"><button class="btn sky big" id="go">다음 친구 ▶</button></div>
+  </div>`);
+  v.querySelector('.coco-svg').classList.add('float');
+  v.querySelector('#go').onclick=()=>{Sound.tap();go('trap');};
+  return v;
+}};
+
+/* ===== 3·4단계: 함정 (편향이 드러나는 순간) ===== */
+SCREENS.trap={top:true,view(){
+  const item=TRAP, p=predict(G.model,item);
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">??? · 이상한 친구</div>
+    <div class="arena" style="min-height:150px">${creatureSVG(item)}</div>
+    <div class="speech coco"><span class="who">코코 (자신만만!)</span><span id="guess">🤔...</span></div>
+    <div class="conf"><div class="conffill" id="cf"></div><div class="lab" id="cflab"></div></div>
+    <div class="footer" id="foot" style="opacity:0;transition:opacity .3s">
+      <div class="hint" style="margin-bottom:9px">연구원님, 코코 말이 맞을까요?</div>
+      <div class="btnrow">
+        <button class="btn kkachil" data-v="agree">✅ 코코 말이 맞아</button>
+        <button class="btn ghost" data-v="deny">🔎 잠깐, 다시 보자</button>
+      </div>
+    </div>
+  </div>`);
+  v.querySelector('.creature-svg').classList.add('float','pop');
+  Sound.think();
+  setTimeout(()=>{
+    v.querySelector('#guess').innerHTML=reasonText(p.reason,p.pred)+' 확실해요! 😎';
+    v.querySelector('#cf').style.width=Math.round(p.conf*100)+'%';
+    v.querySelector('#cflab').textContent='자신감 '+Math.round(p.conf*100)+'%';
+    const foot=v.querySelector('#foot');foot.style.opacity=1;
+    foot.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>trapReveal(v,item,p,b.dataset.v));
+  },1000);
+  return v;
+}};
+function trapReveal(v,item,p,choice){
+  v.querySelectorAll('[data-v]').forEach(b=>b.disabled=true);
+  Sound.reveal();
+  G.caught = (choice==='deny');
+  G.trustedTrap = (choice==='agree');
+  // 더듬이 강조하며 진실 공개
+  v.querySelector('.arena').innerHTML=creatureSVG(item,{highlight:'antenna'});
+  v.querySelector('.arena .creature-svg').classList.add('float');
+  const head = G.caught
+    ? `<div class="verdict good">대박! 연구원이 잡아냈어요! 🕵️</div>`
+    : `<div class="verdict bad">어라?! 코코가 틀렸어요! 😵</div>`;
+  v.querySelector('#foot').innerHTML=`
+    ${head}
+    <div class="speech" style="margin-top:8px;text-align:left">
+      더듬이 끝을 봐! <b>동그라미 ●</b> 잖아? 사실 이 친구는 <span class="tag porong">포롱이</span> 였어요.<br>
+      코코는 <b>"빨간색=까칠이"</b> 라고 굳게 믿고 <b>색깔만</b> 보고 판단했죠.</div>
+    <div class="footer"><button class="btn coco big" id="next" style="margin-top:12px">코코는 왜 틀렸을까? ▶</button></div>`;
+  v.querySelector('#next').onclick=()=>{Sound.tap();go('trapWhy');};
+}
+
+SCREENS.trapWhy={top:true,view(){
+  const rc=cueReliability(G.model,'color'), ra=cueReliability(G.model,'antenna');
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">왜 그럴까?</div>
+    <h2 style="font-size:22px;margin:2px 0 8px">코코가 본 데이터가<br>한쪽으로 치우쳤어요</h2>
+    <div class="arena" style="min-height:120px">${cocoSVG(3,"sad",140)}</div>
+    <div class="speech coco" style="margin-bottom:12px"><span class="who">코코</span>
+      흑흑… 제가 배운 포롱이는 <b>전부 파랑·초록</b>이고, 까칠이는 <b>전부 빨강·주황</b>이었어요.
+      그래서 "<b>따뜻한 색이면 무조건 까칠이</b>"라고 외워버렸어요. 진짜 단서인 <b>더듬이</b>는 놓쳤죠!</div>
+    ${brainBox(rc,ra,"두 단서 다 100%처럼 보이지만, 진짜 규칙은 더듬이 하나뿐이었어요. 코코는 더 눈에 띄는 '색깔'에 속은 거예요!")}
+    <div class="speech" style="margin-top:12px">💡 <b>치우친(편향된) 데이터</b>로 배우면, AI는 진짜 이유 대신 <b>우연히 같이 나타난 것</b>을 규칙으로 착각해요.</div>
+    <div class="footer"><button class="btn coco big" id="go">코코를 도와주자! ▶</button></div>
+  </div>`);
+  v.querySelector('.coco-svg').classList.add('float');
+  animateBars(v);
+  v.querySelector('#go').onclick=()=>{Sound.tap();go('fix');};
+  return v;
+}};
+
+/* ===== 데이터 보강(피드백) ===== */
+SCREENS.fix={top:true,view(){
+  if(G.idx>=FIX.length) return SCREENS.fixDone.view();
+  const item=FIX[G.idx];
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">코코 도와주기 <span style="color:var(--ink-soft)">(${G.idx+1}/${FIX.length})</span></div>
+    <h2 style="font-size:21px;margin:2px 0 6px">새로운 친구를 보여주자!</h2>
+    <div class="arena">${creatureSVG(item,{highlight:'antenna'})}</div>
+    <div id="msg" class="speech coco" style="display:none"></div>
+    <div class="footer" id="foot">
+      <div class="hint" style="margin-bottom:9px">더듬이 끝을 잘 보고 알려줘! ● 동그라미면 포롱이, ▲ 뾰족이면 까칠이</div>
+      <div class="btnrow">
+        <button class="btn porong" data-a="porong">포롱이</button>
+        <button class="btn kkachil" data-a="kkachil">까칠이</button>
+      </div>
+    </div>
+  </div>`);
+  v.querySelector('.creature-svg').classList.add('float','pop');
+  v.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>answerFix(v,item,b.dataset.a));
+  return v;
+}};
+function answerFix(v,item,ans){
+  const correct=ans===item.label;
+  v.querySelectorAll('[data-a]').forEach(b=>b.disabled=true);
+  if(correct){Sound.good();confetti(20);}else{Sound.bad();v.querySelector('.creature-svg').classList.add('shake');}
+  G.trained.push(item);G.model=trainModel(G.trained);G.dataCount=G.trained.length;
+  G.dex[item.label]={...item};updateTop();
+  const surprise = (item.color==='red'||item.color==='orange')&&item.label==='porong'
+    ? `오! <b>${item.color==='red'?'빨간':'주황'} 포롱이</b>도 있구나! 색깔로만 판단하면 안 되겠네요. 😮`
+    : `<b>${item.color==='blue'?'파란':'초록'} 까칠이</b>라니! 색깔은 진짜 단서가 아니었어요!`;
+  const msg=v.querySelector('#msg');msg.style.display='block';
+  msg.innerHTML=`<span class="who">코코</span>${correct?'맞아요, ':''}<b>${KO[item.label]}</b>! ${TRAIN_WHY(item)}<br>${surprise}`;
+  const foot=v.querySelector('#foot');
+  foot.innerHTML=`<button class="btn coco big" id="next">${G.idx<FIX.length-1?'다음 친구 ▶':'코코야, 다시 맞혀봐! ▶'}</button>`;
+  foot.querySelector('#next').onclick=()=>{Sound.tap();G.idx++;render();};
+}
+
+SCREENS.fixDone={top:true,view(){
+  const rc=cueReliability(G.model,'color'), ra=cueReliability(G.model,'antenna');
+  const p=predict(G.model,TRAP);
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">달라진 코코</div>
+    <h2 style="font-size:22px;margin:2px 0 10px">코코의 머릿속이 바뀌었어요!</h2>
+    ${brainBox(rc,ra,"색깔은 이제 믿을 수 없는 단서가 됐고, 더듬이가 진짜 규칙으로 남았어요!")}
+    <div class="speech coco" style="margin:12px 0"><span class="who">코코</span>
+      이제 알겠어요! <b>색깔은 우연</b>이었고, 진짜 단서는 <b>더듬이</b>였어요. 아까 그 빨간 친구 다시 보여주세요! 💪</div>
+    <div class="footer"><button class="btn coco big" id="go">그 함정 친구 다시 보기 ▶</button></div>
+  </div>`);
+  animateBars(v);
+  v.querySelector('#go').onclick=()=>{Sound.tap();go('retrap');};
+  return v;
+}};
+
+SCREENS.retrap={top:true,view(){
+  const item=TRAP,p=predict(G.model,item);
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">다시 도전!</div>
+    <div class="arena" style="min-height:150px">${creatureSVG(item)}</div>
+    <div class="speech coco"><span class="who">코코 (이번엔...)</span><span id="guess">🤔...</span></div>
+    <div class="conf"><div class="conffill" id="cf"></div><div class="lab" id="cflab"></div></div>
+    <div class="footer" id="foot" style="opacity:0;transition:opacity .3s"></div>
+  </div>`);
+  v.querySelector('.creature-svg').classList.add('float','pop');
+  Sound.think();
+  setTimeout(()=>{
+    v.querySelector('#guess').innerHTML=reasonText(p.reason,p.pred)+' 이번엔 더듬이를 봤어요! 😊';
+    v.querySelector('#cf').style.width=Math.round(p.conf*100)+'%';
+    v.querySelector('#cflab').textContent='자신감 '+Math.round(p.conf*100)+'%';
+    const right=p.pred===item.truth;
+    if(right){Sound.good();confetti(30);}
+    const foot=v.querySelector('#foot');foot.style.opacity=1;
+    foot.innerHTML=`<div class="verdict good">정답! 코코가 똑똑해졌어요! 🌟</div>
+      <p class="speech" style="margin-top:8px">데이터를 더 주니까 코코의 실력이 <b>변했어요</b>. AI는 이렇게 <b>새 데이터로 계속 자라요!</b></p>
+      <div class="footer"><button class="btn coco big" id="next" style="margin-top:10px">마지막 친구가 찾아왔어요 ▶</button></div>`;
+    foot.querySelector('#next').onclick=()=>{Sound.tap();go('novel');};
+  },1100);
+  return v;
+}};
+
+/* ===== 처음 보는 유형 ===== */
+SCREENS.novel={top:true,view(){
+  const item=NOVEL,p=predict(G.model,item);
+  const v=el(`<div class="card scroll">
+    <div class="eyebrow">처음 보는 친구!</div>
+    <div class="arena" style="min-height:150px">${creatureSVG(item)}</div>
+    <div class="speech coco"><span class="who">코코</span><span id="guess">🤔...</span></div>
+    <div class="conf"><div class="conffill" id="cf"></div><div class="lab" id="cflab"></div></div>
+    <div class="footer" id="foot" style="opacity:0;transition:opacity .3s"></div>
+  </div>`);
+  v.querySelector('.creature-svg').classList.add('float','pop');
+  Sound.think();
+  setTimeout(()=>{
+    v.querySelector('#guess').innerHTML=`으음… 보라색에 별 모양 더듬이라니, <b>이런 친구는 처음 봐요</b>. 잘 모르겠어요… 🥴`;
+    v.querySelector('#cf').style.width=Math.round(p.conf*100)+'%';
+    v.querySelector('#cflab').textContent='자신감 '+Math.round(p.conf*100)+'% (헷갈림)';
+    const foot=v.querySelector('#foot');foot.style.opacity=1;
+    foot.innerHTML=`
+      <div class="hint" style="margin-bottom:9px">코코는 포롱이/까칠이 둘 중 하나로만 답하려고 해요. 근데 이 친구는…?</div>
+      <button class="btn banjjak big" id="reveal">정체 밝히기 ✨</button>`;
+    foot.querySelector('#reveal').onclick=()=>{
+      Sound.reveal();confetti(24);
+      G.dex.banjjak={...item};
+      foot.innerHTML=`<div class="verdict">새로운 종족 발견! ✨</div>
+        <p class="speech" style="margin-top:8px">이 친구는 포롱이도 까칠이도 아닌 <span class="tag banjjak">반짝이</span> 였어요!<br>
+        코코는 <b>배운 적 없는 건 알 수 없어요.</b> AI는 자기가 <b>학습한 것만</b> 알거든요.</p>
+        <div class="footer"><button class="btn coco big" id="next" style="margin-top:10px">연구 마무리하기 ▶</button></div>`;
+      foot.querySelector('#next').onclick=()=>{Sound.tap();go('wrap');};
+    };
+  },1100);
+  return v;
+}};
+
+/* ===== 마무리 ===== */
+SCREENS.wrap={top:true,view(){
+  const dexOrder=['porong','kkachil','banjjak'];
+  const dex=dexOrder.filter(k=>G.dex[k]).map(k=>`<div class="dexcell">${creatureSVG(G.dex[k],{size:78})}<div class="nm">${KO[k]}</div></div>`).join('');
+  const insights=[
+    ['🌱','AI는 처음부터 똑똑한 게 아니라, <b>사람이 준 데이터로 배워요.</b>'],
+    ['🎨','데이터가 <b>치우치면(편향)</b> AI는 엉뚱한 걸 규칙으로 착각해요.'],
+    ['🔁','<b>좋은 데이터를 더 주면</b> AI의 실력은 계속 변하고 자라요.'],
+    ['❓','AI는 <b>배운 적 없는 것</b>은 알 수 없어요.'],
+    ['🕵️','그래서 AI의 답은 <b>사람이 꼭 확인하고 판단</b>해야 해요!'],
+  ];
+  const ins=insights.map(i=>`<div class="insight"><div class="ic">${i[0]}</div><div class="tx">${i[1]}</div></div>`).join('');
+  const badge=`<svg class="badge-big" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g><path d="M100 14 l22 14 26 -3 9 25 22 15 -9 25 9 25 -22 15 -9 25 -26 -3 -22 14 -22 -14 -26 3 -9 -25 -22 -15 9 -25 -9 -25 22 -15 9 -25 26 3 Z" fill="#ffd23f" stroke="#f0b400" stroke-width="4"/>
+    <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="22s" repeatCount="indefinite"/></g>
+    <circle cx="100" cy="100" r="56" fill="#fff7e0" stroke="#f0b400" stroke-width="4"/>
+    <text x="100" y="92" font-size="40" text-anchor="middle">🕵️</text>
+    <text x="100" y="128" font-size="17" text-anchor="middle" fill="#a06a00" font-family="Jua">AI 트레이너</text>
+  </svg>`;
+  const verdict = G.caught
+    ? `함정에서 코코의 실수를 <b>직접 잡아낸</b> 멋진 연구원이에요! 🏅`
+    : `코코를 믿었다가 함정에 빠졌지만, 덕분에 <b>"AI도 틀린다"</b>는 걸 확실히 배웠어요! 💡`;
+  const v=el(`<div class="card scroll center">
+    <div class="eyebrow">졸업!</div>
+    <h2 style="font-size:24px;margin:2px 0 4px">최고의 AI 트레이너 인증!</h2>
+    ${badge}
+    <p class="speech" style="margin:4px 6px 14px">${verdict}</p>
+    <h3 style="font-size:17px;align-self:flex-start;margin:4px 2px 8px;color:var(--ink-soft)">📕 코코 친구 도감</h3>
+    <div class="dexgrid" style="width:100%;margin-bottom:16px">${dex}</div>
+    <h3 style="font-size:17px;align-self:flex-start;margin:0 2px 10px;color:var(--ink-soft)">💎 오늘 얻은 깨달음</h3>
+    <div style="width:100%;text-align:left">${ins}</div>
+    <div class="speech coco" style="margin-top:6px"><span class="who">코코</span>
+      저는 앞으로도 계속 배울 거예요. 그래도 <b>새로운 상황에선 또 틀릴 수 있어요.</b>
+      그러니까 우리 <b>같이</b> 생각하기로 해요! 고마워요, 연구원님 💛</div>
+    <div class="footer" style="width:100%"><button class="btn coco big" id="again">처음부터 다시 키우기 🔄</button></div>
+  </div>`);
+  v.querySelectorAll('.creature-svg, .badge-big').forEach((e,i)=>{if(i===0)e.classList.add('float');});
+  confetti(60);Sound.levelup();
+  v.querySelector('#again').onclick=()=>{Sound.tap();resetGame();};
+  return v;
+}};
+
+function resetGame(){
+  G.screen="title";G.idx=0;G.trained=[];G.model=trainModel([]);G.dataCount=0;G.dex={};G.caught=false;G.trustedTrap=false;G._predIntro=false;
+  render();
+}
+
+/* ---------------- 음소거 ---------------- */
+document.getElementById('muteBtn').onclick=function(){
+  const m=Sound.toggle();this.textContent=m?'🔇':'🔊';if(!m)Sound.pop();
+};
+
+/* ---------------- 시작 ---------------- */
+render();
+</script>
+</body>
+</html>
