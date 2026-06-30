@@ -441,7 +441,7 @@ SCREENS.title={top:false,view(){
       <div class="eyebrow">별빛 연구소 · AI 트레이너</div>
       <h1 style="font-size:34px;line-height:1.15;margin:4px 0 2px">아기 AI<br>코코 키우기</h1>
       <div class="arena" style="min-height:200px">${cocoSVG(0,"idle",210)}</div>
-      <p class="speech center" style="margin:6px 4px 0">아무것도 모르는 아기 AI <b>코코</b>가 알 속에서 잠자고 있어요.<br>네가 직접 가르쳐서 똑똑하게 키워보자!</p>
+      <p class="speech center" style="margin:6px 4px 0">아무것도 모르는 아기 AI <b>코코</b>가 알 속에서 잠자고 있어요.<br>직접 가르쳐서 똑똑하게 키워보자!</p>
     </div>
     <div class="footer">
       <button class="btn coco big" id="start">시작하기 🚀</button>
@@ -464,7 +464,7 @@ SCREENS.intro={top:false,view(){
       외계 친구들을 보여주고 <b>이름표</b>를 붙여주면, 제가 그걸 보고 배울게요. 🐣</div>
     <div class="speech" style="margin-top:10px">
       이 별엔 두 종류 친구가 살아: <span class="tag porong">포롱이</span> 와 <span class="tag kkachil">까칠이</span>.<br>
-      누가 누군지 <b>네가 코코에게 알려줘야</b> 해. 코코는 너를 따라 배운단다!</div>
+      누가 누군지 <b>코코에게 알려줘야</b> 해. 코코는 우리를 따라 배운단다!</div>
     <div class="footer"><button class="btn coco big" id="go">코코 가르치러 가기 ▶</button></div>
   </div>`);
   v.querySelector('.coco-svg').classList.add('float');
@@ -552,7 +552,7 @@ function predictIntro(){
     <h2 style="font-size:23px;margin:6px 0 8px">코코가 혼자 맞혀봐요</h2>
     <div class="arena" style="min-height:170px">${cocoSVG(2,"think",170)}</div>
     <p class="speech" style="margin:4px 6px">이제 코코가 <b>처음 보는 친구</b>를 스스로 분류해요.<br>
-    하지만 AI가 항상 맞는 건 아니죠? <b>연구원인 네가 꼭 확인</b>해줘야 해!</p>
+    하지만 AI가 항상 맞는 건 아니죠? <b>연구원인 우리가 꼭 확인</b>해줘야 해!</p>
     <div class="footer" style="width:100%"><button class="btn sky big" id="go">코코야, 맞혀봐! 👀</button></div>
   </div>`);
   v.querySelector('.coco-svg').classList.add('float');
@@ -561,7 +561,7 @@ function predictIntro(){
 }
 function reasonText(reason,pred){
   const map={color:'색깔', antenna:'더듬이 모양', body:'몸 모양', eyes:'눈 개수', pattern:'무늬'};
-  return `저는 <b>${map[reason]||'생김새'}</b>를 보고 <b>${KO[pred]}</b>라고 생각해요!`;
+  return `저는 <b>${map[reason]||'생김새'}</b> 보고 <b>${KO[pred]}</b>라고 생각해요!`;
 }
 function predictRound(item){
   const p=predict(G.model,item);
@@ -674,7 +674,7 @@ SCREENS.trapWhy={top:true,view(){
       흑흑… 제가 배운 포롱이는 <b>전부 파랑·초록</b>이고, 까칠이는 <b>전부 빨강·주황</b>이었어요.
       그래서 "<b>따뜻한 색이면 무조건 까칠이</b>"라고 외워버렸어요. 진짜 단서인 <b>더듬이</b>는 놓쳤죠!</div>
     ${brainBox(rc,ra,"두 단서 다 100%처럼 보이지만, 진짜 규칙은 더듬이 하나뿐이었어요. 코코는 더 눈에 띄는 '색깔'에 속은 거예요!")}
-    <div class="speech" style="margin-top:12px">💡 <b>치우친(편향된) 데이터</b>로 배우면, AI는 진짜 이유 대신 <b>우연히 같이 나타난 것</b>을 규칙으로 착각해요.</div>
+    <div class="speech" style="margin-top:12px">💡 <b>치우친 데이터</b>로 배우면, AI는 진짜 이유 대신 <b>우연히 같이 나타난 것</b>을 규칙으로 착각해요.</div>
     <div class="footer"><button class="btn coco big" id="go">코코를 도와주자! ▶</button></div>
   </div>`);
   v.querySelector('.coco-svg').classList.add('float');
